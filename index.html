@@ -63,7 +63,6 @@
                 font-family: Adelia;
                 text-align: center;
                 justify-content: center;
-                visibility: hidden;
                 align-items: end;
                 flex-basis: 0;
                 flex-grow: 0;
@@ -73,6 +72,7 @@
                     color: rgba(255, 230, 200, 1);
                     font-size: 64px;
                     line-height: 81px;
+                    visibility: hidden;
                     ">een vrolijke Kerst</m>
                 <m id="elNames"
                     style="
@@ -83,6 +83,7 @@
                     align-items: end;
                     flex-basis: 0;
                     flex-grow: 1;
+                    visibility: hidden;
                     "></m>
             </m>
         </m>
@@ -91,6 +92,8 @@
 
                 let url = window.location
                 let qp = new URL(url)
+
+                await new Promise((res, rej) => setTimeout(res, 400))
 
                 let numerus = qp.searchParams.get('numerus')
                 if (numerus === 'enkelvoud') {
@@ -101,6 +104,8 @@
                 
                 let van = qp.searchParams.get('van')
                 elNames.textContent = van
+
+                await new Promise((res, rej) => setTimeout(res, 200))
 
                 /** @type {HTMLCanvasElement} elCanvas */
                 let elCanvas = window.document.getElementById('elCanvas')
@@ -213,7 +218,13 @@
                 })
                 })
 
-                elText.style.visibility = 'visible'
+                await new Promise((res, rej) => setTimeout(res, 200))
+
+                elMerryChristmas.style.visibility = 'visible'
+
+                await new Promise((res, rej) => setTimeout(res, 800))
+
+                elNames.style.visibility = 'visible'
             })
 
 
