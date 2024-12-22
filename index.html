@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerst 2024</title>
+    <style type="text/css">
+        * {
+            display: block;
+            margin: 0px;
+            padding: 0px;
+            border: none;
+            box-sizing: border-box;
+        }
+        meta, title, style, script {
+            display: none;
+        }
+        @font-face {
+            font-family: Adelia;
+            src: url(./fonts/Adelia/adelia.ttf);
+        }
+    </style>
+</head>
+<body style="min-height: 100%;">
+    <m style="height: 100%; display:grid;background: linear-gradient(to bottom, rgb(44, 41, 41), rgb(63, 63, 59));">
+        <canvas id="elCanvas"
+            style="
+                grid-area: 1 / 1;
+                height: 100vh;
+                width: 100%;  
+                background-color: transparent;
+                overflow: visible;
+            ">
+        
+        </canvas>
+
+        <m style="
+            grid-area: 1 / 1;
+            display: flex;
+            height: 100vh;
+            flex-direction: column;">
+            <m id="elVanwege" style="
+                font-family: Adelia;
+                visibility: hidden;
+                color: rgba(220, 240, 255, 1);
+                justify-content: center;
+                align-items: top;
+                text-align: center;
+                padding-top: 8px;
+                flex-grow: 0;
+                flex-basis: 1;
+                display: grid;
+                font-size: 32px;
+            ">
+                <m id="elEnkelvoud" style="grid-area: 1 /1; visibility: hidden;">Ik wens u ...</m>
+                <m id="elMeervoud" style="grid-area: 1 / 1; visibility: hidden;">Wij wensen u...</m>
+            </m>
+
+            <m id="elEasel" style="display: block;
+            flex-grow: 1;"></m>
+
+            <m id="elText" style="
+                font-family: Adelia;
+                text-align: center;
+                justify-content: center;
+                visibility: hidden;
+                align-items: end;
+                flex-basis: 0;
+                flex-grow: 0;
+                margin-bottom: 8px;
+                ">
+                <m id="elMerryChristmas" style="
+                    color: rgba(255, 230, 200, 1);
+                    font-size: 64px;
+                    line-height: 81px;
+                    ">een vrolijke Kerst</m>
+                <m id="elNames"
+                    style="
+                    font-size: 25px;
+                    color: rgb(247, 114, 96);
+                    text-align: center;
+                    justify-content: center;
+                    align-items: end;
+                    flex-basis: 0;
+                    flex-grow: 1;
+                    "></m>
+            </m>
+        </m>
+        <script type="text/javascript">
+            window.addEventListener('load', async function (ev) {
+
+                let url = window.location
+                let qp = new URL(url)
+
+                let numerus = qp.searchParams.get('numerus')
+                if (numerus === 'enkelvoud') {
+                    elEnkelvoud.style.visibility = 'visible'
+                } else if (numerus === 'meervoud') {
+                    elMeervoud.style.visibility = 'visible'
+                }
+                
+                let van = qp.searchParams.get('van')
+                elNames.textContent = van
+
+                /** @type {HTMLCanvasElement} elCanvas */
+                let elCanvas = window.document.getElementById('elCanvas')
+                let drawing_context = elCanvas.getContext('2d')
+                
+                let canvas_size = [elCanvas.clientWidth, elCanvas.clientHeight]
+                elCanvas.width = canvas_size[0]
+                elCanvas.height = canvas_size[1]
+
+                let center = canvas_size.map(x => Math.floor(x / 2))
+
+                let image_size = [
+                    elEasel.clientWidth,
+                    elCanvas.clientHeight - elVanwege.clientHeight - elText.clientHeight
+                ]
+
+                let start_ratio = elVanwege.clientHeight / canvas_size[1]
+                let end_ratio = (elVanwege.clientHeight + elEasel.clientHeight) / canvas_size[1]
+
+                let radius_size = Math.min(...image_size)
+                
+                drawing_context.clearRect(0, 0, ...canvas_size)
+                let ster = {
+                    center: [
+                        (x) => polynomial_function(x, [2.5, -31, 122, -173, 80]),
+                        (x) => polynomial_function(x, [start_ratio, (end_ratio - start_ratio) * 0.8]),
+                    ],
+                    radius: (x) => polynomial_function(x, [0.01, 0.2, 0.02]),
+                    color:  (x) => {
+                        let gradient = [[220, 240, 255, 1], [255, 230, 200, 1]]
+                        let color = [0, 1, 2].map((i) => {
+                            let progress = gradient[0][i] + (gradient[1][i] -  gradient[0][i]) * x
+                            return progress
+                        })
+                        return [...color, 1]
+                    },
+                    fill: (x, total) => {                        
+                        let step = (x + 1) % (total / 10)
+                        return step === 0
+                    },
+                }
+
+                /**
+                 * @type {number} x
+                 * @type {number[]} factors
+                 */
+                function polynomial_function (x, factors) {
+                    let result = 0
+                    for (let i = 0; i < factors.length; ++i) {
+                        let factor = factors[i]
+                        let y = (x**i) * factor
+                        result += y
+                    }
+                    return result
+                }
+
+                function * draw_ster() {
+                    let number_of_draws = 500
+                    for (let i_draw = 0; i_draw < number_of_draws; ++i_draw) {
+                        let x = i_draw / number_of_draws
+                        let x_prev = (i_draw - 1) / number_of_draws
+                        let center  = ster.center.map((fn, i) => fn(x) * canvas_size[i])
+
+                        let radius  = ster.radius(x) * radius_size
+        
+                        let rotation = 0.10 * number_of_draws * x * Math.PI * 2
+                        let points = []
+                        for (let i = 0; i < 5; ++i) {
+                            points.push([Math.cos(Math.PI * 2 * (i * 2 + 0) / 10 + rotation), Math.sin(Math.PI * 2 * (i * 2 + 0) / 10 + rotation)].map((x, i) => center[i] + x * radius))
+                            points.push([Math.cos(Math.PI * 2 * (i * 2 + 1) / 10 + rotation), Math.sin(Math.PI * 2 * (i * 2 + 1) / 10 + rotation)].map((x, i) => center[i] + x * radius / 2))
+                        }
+
+                        let color = ster.color(x)
+                        let stroke_style = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`
+
+                        drawing_context.beginPath()
+                        drawing_context.moveTo(...points[9])
+                        
+                        for (let i = 0; i < 10; ++i) {
+                            drawing_context.lineTo(...points[i])
+                        }
+
+                        drawing_context.strokeStyle = stroke_style
+                        drawing_context.stroke()
+
+                        let fill = ster.fill(i_draw, number_of_draws)
+                        
+                        if (fill) {
+                            drawing_context.fillStyle = stroke_style
+                            drawing_context.fill()
+                        }
+
+                        yield
+                    }
+                }
+
+                let s = draw_ster()
+
+                await new Promise((res, rej) => {
+      
+
+                    window.requestAnimationFrame(async function handleAnimationFrame() {
+                    let value = s.next()
+                    if (!value.done) {
+                        await new Promise((res, rej) => setTimeout(res, 5))
+                        window.requestAnimationFrame(handleAnimationFrame)
+                    } else {
+                        res()
+                    }
+                })
+                })
+
+                elText.style.visibility = 'visible'
+            })
+
+
+        </script>
+    </m>
+</body>
+</html>
