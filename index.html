@@ -162,7 +162,7 @@
                     return result
                 }
 
-                function * draw_ster() {
+                function * create_render_ster_generator() {
                     let number_of_draws = 500
                     for (let i_draw = 0; i_draw < number_of_draws; ++i_draw) {
                         let x = i_draw / number_of_draws
@@ -202,20 +202,31 @@
                     }
                 }
 
-                let s = draw_ster()
+                let render_ster_generator = create_render_ster_generator()
 
+                let time_ms_prev = 0
                 await new Promise((res, rej) => {
-      
+                    window.requestAnimationFrame(async function handleAnimationFrame(time_ms) {
+                        let count_render
+                        if (time_ms_prev === 0) {
+                            count_render = 1
+                            time_ms_prev = time_ms
+                        } else {
+                            let diff = time_ms - time_ms_prev
+                            count_render = Math.floor(diff / 10)
+                            time_ms_prev += 10 * count_render
+                        }
 
-                    window.requestAnimationFrame(async function handleAnimationFrame() {
-                    let value = s.next()
-                    if (!value.done) {
-                        await new Promise((res, rej) => setTimeout(res, 5))
+                        for (let i = 0; i < count_render; ++i) {
+                            value = render_ster_generator.next()
+                            if (value.done) {
+                                res()
+                                return
+                            }
+                        }
+
                         window.requestAnimationFrame(handleAnimationFrame)
-                    } else {
-                        res()
-                    }
-                })
+                    })
                 })
 
                 await new Promise((res, rej) => setTimeout(res, 200))
